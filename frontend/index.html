@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+  <title>Shortcut Buttons</title>
+</head>
+
+<body>
+  <div class="button-container">
+    <div id="add-button" class="button-add">
+      <p id="plus-label">+</p>
+    </div>
+    <div id="global-setting-button" class="button-global-setting">
+      <p id="setting-label">⚙️</p>
+    </div>
+  </div>
+
+  <div id="settings-dialog">
+    <label for="label1">Label:</label>
+    <input type="text" id="label1" placeholder="Enter label">
+    <label for="key1">Key:</label>
+    <input type="text" id="key1" placeholder="Enter key">
+    <button id="ok-button">OK</button>
+    <button id="cancel-button">Cancel</button>
+    <button id="remove-button">Remove</button>
+  </div>
+  <div id="global-settings-dialog">
+    <label for="api-url">URL:</label>
+    <input type="text" id="api-url" placeholder="http://http2kb.local/">
+    <button id="global-setting-ok-button">OK</button>
+    <button id="global-setting-cancel-button">Cancel</button>
+  </div>
+  <script>
+    http2kb = {};
+    (function () {
+
+      http2kb.buttons = [];
+
+      window.addEventListener('DOMContentLoaded', function () {
+
+        document.querySelector('#ok-button').addEventListener('click', setButtonInfo);
+        document.querySelector('#cancel-button').addEventListener('click', cancelButtonSetting);
+        document.querySelector('#remove-button').addEventListener('click', removeButton);
+        document.querySelector('#add-button').addEventListener('click', addButton);
+        document.querySelector('#global-setting-button').addEventListener('click', globalSettingButtonClicked);
+        document.querySelector('#global-setting-ok-button').addEventListener('click', applyGlobalSetting);
+        document.querySelector('#global-setting-cancel-button').addEventListener('click', globalCancelButtonSetting);
+
+        
+        document.querySelector('#label1').addEventListener('change', function(e) { http2kb.newLabel = e.target.value;});
+        document.querySelector('#key1').addEventListener('change', function(e) { http2kb.newKey = e.target.value;});
+
+        document.querySelector('#api-url').addEventListener('change', function(e) { http2kb.apiUrl = e.target.value; });
+
+        loadButtons();
+        renderButtons();
+        version();
+      });
+
+
+      function renderButtons() {
+        document.querySelectorAll('.button').forEach(function(b){
+          b.remove();
+        });
+
+        var buttonContainer = document.querySelector('.button-container');
+        http2kb.buttons.forEach(function(button, index){
+          var buttonElement = document.createElement('div');
+          buttonElement.className = "button";
+
+          var labelElement = document.createElement('p');
+          buttonElement.appendChild(labelElement);
+
+          var gearElement = document.createElement('span');
+          gearElement.innerText = '⚙️';
+          gearElement.className = 'gear'
+          gearElement.addEventListener('click', settingButtonClicked);
+          
+          buttonElement.addEventListener('click', buttonClicked);
+          buttonElement.appendChild(gearElement);
+          buttonElement.dataset.index = index;
+          buttonElement.appendChild(document.createTextNode(button.label));
+          buttonContainer.appendChild(buttonElement);
+        });
+        buttonContainer.appendChild(document.querySelector('#add-button'));
+        buttonContainer.appendChild(document.querySelector('#global-setting-button'));
+      }
+
+      function render() {
+
+        var settingsDialog = document.querySelector('#settings-dialog');
+        settingsDialog.style.display = http2kb.showButtonSettingDialog ? 'block' : 'none';
+
+        var globalSettingsDialog = document.querySelector('#global-settings-dialog');
+        globalSettingsDialog.style.display = http2kb.showGlobalSettingDialog ? 'block' : 'none';
+      }
+
+      function settingButtonClicked(e) {
+        http2kb.clickedButtonIndex = Number(e.target.parentElement.dataset.index);
+        var selectedButton = http2kb.buttons[http2kb.clickedButtonIndex];
+        document.getElementById('label1').value = selectedButton.label;
+        document.getElementById('key1').value = selectedButton.key;
+
+        http2kb.showButtonSettingDialog = true;
+        render();
+
+        e.stopPropagation();
+      }
+
+      function globalSettingButtonClicked(e) {
+
+        loadApiUrl();
+        document.getElementById('api-url').value = http2kb.apiUrl;
+
+        http2kb.showGlobalSettingDialog = true;
+        render();
+
+        e.stopPropagation();
+      }
+
+      function buttonClicked(e) {
+        console.log("key press = " + http2kb.buttons[Number(e.target.dataset.index)].key);
+      }
+
+      function addButton(e) {
+        http2kb.buttons.push({label:'New Button' , key: ''});
+        saveButtons();
+        renderButtons();
+      }
+
+      function removeButton(index) {
+
+        http2kb.buttons.splice(http2kb.clickedButtonIndex, 1);
+
+        saveButtons();
+        renderButtons();
+
+        http2kb.showButtonSettingDialog = false;
+        render();
+      }
+
+      function setButtonInfo() {
+        var targetButton = http2kb.buttons[http2kb.clickedButtonIndex];
+        targetButton.label = http2kb.newLabel;
+        targetButton.key = http2kb.newKey;
+
+        saveButtons();
+        renderButtons();
+
+        http2kb.showButtonSettingDialog = false;
+        render();
+      }
+
+      function cancelButtonSetting() {
+        http2kb.showButtonSettingDialog = false;
+        render();
+      }
+
+      function applyGlobalSetting() {
+
+        var url = http2kb.apiUrl || 'http://http2kb.local/';
+        localStorage.setItem('api-url', url);
+
+        http2kb.showGlobalSettingDialog = false;
+        render();
+      }
+
+      function globalCancelButtonSetting() {
+        http2kb.showGlobalSettingDialog = false;
+        render();
+      }
+
+      function loadButtons() {
+        var b = localStorage.getItem('buttons');
+        if (b) {
+          http2kb.buttons = JSON.parse(b);
+        } else {
+          http2kb.buttons = [];
+        }
+      }
+
+      function saveButtons() {
+        localStorage.setItem('buttons', JSON.stringify(http2kb.buttons));
+      }
+
+      function loadApiUrl() {
+        http2kb.apiUrl = localStorage.getItem('api-url') || 'http://http2kb.local/';
+      }
+
+      function version() {
+
+        var v = localStorage.getItem('version') || 1;
+        localStorage.setItem('version', v);
+      }
+
+    })();
+  </script>
+</body>
+
+</html>
