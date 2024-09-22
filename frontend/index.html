@@ -122,7 +122,12 @@
       }
 
       function buttonClicked(e) {
-        console.log("key press = " + http2kb.buttons[Number(e.target.dataset.index)].key);
+        const assignedKey = http2kb.buttons[Number(e.target.dataset.index)].key;
+        if (assignedKey) {
+          console.log("key press = " + assignedKey);
+        } else {
+          console.log("no assign")
+        }
       }
 
       function addButton(e) {
