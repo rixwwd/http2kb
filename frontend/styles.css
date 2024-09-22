@@ -28,6 +28,7 @@ body {
   align-items: center;
   font-size: 14px;
   font-weight: bold;
+  cursor: pointer;
 }
 .button-add, .button-global-setting {
   width: 100px;
@@ -42,6 +43,7 @@ body {
   align-items: center;
   font-size: 14px;
   font-weight: bold;
+  cursor: pointer;
 }
 
 .gear {
